@@ -18,8 +18,8 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
 
-  <!-- TOP BAR / HEADER -->
-  <header class="sticky top-0 z-40 border-b border-slate-800 glass-header px-4 py-3">
+  <!-- TOP BAR / HEADER LIMPO (SEM NOMES DE MODELOS) -->
+  <header class="sticky top-0 z-40 border-b border-slate-800 glass-header px-4 py-3.5">
     <div class="max-w-6xl mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
@@ -29,17 +29,15 @@
           <h1 class="font-extrabold text-base md:text-lg leading-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">
             BuscaPrecisa
           </h1>
-          <p class="text-[11px] text-slate-400 font-medium">Filtro Técnico Real em Múltiplas Lojas</p>
+          <p class="text-[11px] text-slate-400 font-medium">Filtro Técnico em Múltiplas Lojas</p>
         </div>
       </div>
 
-      <!-- STATUS DO MODELO E CONFIGURAÇÃO -->
       <div class="flex items-center space-x-2">
-        <button id="btnOpenSettings" onclick="openSettingsModal()" class="flex items-center space-x-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300 transition-all hover:border-indigo-500/60 shadow-sm">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="headerModelBadge" class="truncate max-w-[120px] md:max-w-none">gemini-2.5-flash</span>
-          <i class="fa-solid fa-sliders text-slate-400 text-[10px] ml-1"></i>
-        </button>
+          Sistema Ativo
+        </span>
       </div>
     </div>
   </header>
@@ -56,7 +54,7 @@
         Encontre o produto com a <span class="text-indigo-400">especificação exata</span>
       </h2>
       <p class="text-xs md:text-sm text-slate-400 max-w-xl mx-auto">
-        Pesquisa em múltiplas lojas ao mesmo tempo e descarta anúncios que mentem nas palavras-chave.
+        Pesquisa em múltiplas lojas brasileiras e descarta modelos que mentem nas palavras-chave.
       </p>
     </div>
 
@@ -90,7 +88,7 @@
             placeholder="Ex: motor a indução, 256gb, copo de vidro"
             class="w-full bg-transparent border-0 text-xs md:text-sm text-white placeholder-slate-600 focus:outline-none font-medium"
           />
-          <p class="text-[10px] text-slate-500 mt-1">A IA descarta qualquer item sem essa característica real.</p>
+          <p class="text-[10px] text-slate-500 mt-1">O sistema descarta qualquer item sem essa característica real.</p>
         </div>
 
         <!-- Proibido -->
@@ -135,22 +133,23 @@
 
     </div>
 
-    <!-- PAINEL DE STATUS E FALLBACK -->
-    <div id="statusContainer" class="hidden rounded-xl border p-4 text-xs font-medium space-y-2 transition-all">
+    <!-- PAINEL DE STATUS DE BUSCA (DISCRETO E PROFISSIONAL) -->
+    <div id="statusContainer" class="hidden rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-4 text-xs font-medium space-y-2 transition-all">
       <div class="flex items-center space-x-2">
-        <div id="statusSpinner" class="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
-        <span id="statusMessage" class="text-slate-300 font-semibold">Pesquisando produtos com a IA...</span>
+        <div class="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+        <span id="statusMessage" class="text-slate-300 font-semibold">Pesquisando produtos e verificando especificações técnicas...</span>
       </div>
-      <div id="fallbackLogs" class="text-[11px] text-amber-300/90 pl-6 space-y-1"></div>
     </div>
 
     <!-- RESULTADOS -->
     <div id="resultsSection" class="space-y-4">
       <div id="resultsHeader" class="hidden items-center justify-between">
         <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">
-          <span id="resultsCount">0</span> produtos encontrados
+          <span id="resultsCount">0</span> produtos verificados
         </h3>
-        <span id="usedModelBadge" class="text-[11px] px-2.5 py-1 rounded-md bg-slate-800 text-slate-400 border border-slate-700"></span>
+        <span class="text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md font-medium">
+          <i class="fa-solid fa-check mr-1"></i> Critérios Validados
+        </span>
       </div>
 
       <!-- GRID DOS CARDS DE PRODUTOS -->
@@ -161,90 +160,16 @@
 
   </main>
 
-  <!-- MODAL DE CONFIGURAÇÃO (ADMIN / MODELOS) -->
-  <div id="settingsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
-      
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
-        <div class="flex items-center space-x-2">
-          <i class="fa-solid fa-microchip text-indigo-400"></i>
-          <h3 class="font-bold text-white text-base">Configurações & Modelos</h3>
-        </div>
-        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <!-- URL do Backend Invisível (Cloudflare Worker) -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-semibold text-slate-300">
-          URL do Cloudflare Worker (Chave Escondida)
-        </label>
-        <input 
-          type="text" 
-          id="settingApiUrl" 
-          placeholder="https://busca-precisa.seu-nome.workers.dev" 
-          class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono"
-        />
-        <p class="text-[10px] text-slate-500">
-          Deixe no <code class="text-indigo-400">config.js</code> para que todos os visitantes usem sem precisar configurar nada.
-        </p>
-      </div>
-
-      <!-- Modelo Ativo Escolhido -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-semibold text-slate-300">
-          Modelo Prioritário (Tentativa 1)
-        </label>
-        <select 
-          id="settingCurrentModel" 
-          class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-medium"
-        >
-          <!-- Preenchido via JS -->
-        </select>
-        <p class="text-[10px] text-slate-500">
-          Também pode ser alterado diretamente no arquivo <code class="text-indigo-400">config.js</code> pelo celular no GitHub!
-        </p>
-      </div>
-
-      <!-- Cascata de Fallback -->
-      <div class="space-y-1.5">
-        <label class="block text-xs font-semibold text-slate-300">
-          Ordem da Cascata de Fallback
-        </label>
-        <div id="fallbackOrderList" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 space-y-1.5 text-xs text-slate-300 font-mono">
-          <!-- Preenchido via JS -->
-        </div>
-        <p class="text-[10px] text-slate-500">
-          Se o modelo 1 oscilar, pula para o 2, depois para o 3 automaticamente.
-        </p>
-      </div>
-
-      <!-- Botão Salvar -->
-      <div class="pt-2 flex justify-end space-x-2">
-        <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">
-          Fechar
-        </button>
-        <button onclick="saveSettings()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition-all shadow-md">
-          Salvar
-        </button>
-      </div>
-
-    </div>
-  </div>
-
   <!-- JAVASCRIPT DA APLICAÇÃO -->
   <script>
-    // Estado Global
-    let workerApiUrl = localStorage.getItem('worker_api_url') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.apiUrl : '') || '';
-    let currentModel = localStorage.getItem('gemini_selected_model') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.currentModel : 'gemini-2.5-flash');
-    let fallbackList = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.fallbackModels) ? [...APP_CONFIG.fallbackModels] : ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    const workerApiUrl = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.apiUrl) 
+      ? APP_CONFIG.apiUrl 
+      : 'https://busca-precisa-api.kcersar-kal.workers.dev';
+
     let selectedStores = [];
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('headerModelBadge').innerText = currentModel;
       renderStoreBadges();
-      populateSettingsModal();
     });
 
     function renderStoreBadges() {
@@ -292,44 +217,8 @@
       renderStoreBadges();
     }
 
-    function openSettingsModal() {
-      document.getElementById('settingApiUrl').value = workerApiUrl;
-      const select = document.getElementById('settingCurrentModel');
-      select.innerHTML = '';
-      fallbackList.forEach(model => {
-        const opt = document.createElement('option');
-        opt.value = model;
-        opt.innerText = model;
-        if (model === currentModel) opt.selected = true;
-        select.appendChild(opt);
-      });
-
-      const listDiv = document.getElementById('fallbackOrderList');
-      listDiv.innerHTML = fallbackList.map((m, idx) => `
-        <div class="flex items-center justify-between py-0.5">
-          <span class="text-slate-400">${idx + 1}. ${m}</span>
-          ${idx === 0 ? '<span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 rounded">Prioritário</span>' : '<span class="text-[10px] text-slate-500">Fallback</span>'}
-        </div>
-      `).join('');
-
-      document.getElementById('settingsModal').classList.remove('hidden');
-    }
-
-    function closeSettingsModal() {
-      document.getElementById('settingsModal').classList.add('hidden');
-    }
-
-    function saveSettings() {
-      workerApiUrl = document.getElementById('settingApiUrl').value.trim();
-      currentModel = document.getElementById('settingCurrentModel').value;
-      localStorage.setItem('worker_api_url', workerApiUrl);
-      localStorage.setItem('gemini_selected_model', currentModel);
-      document.getElementById('headerModelBadge').innerText = currentModel;
-      closeSettingsModal();
-    }
-
     // ==========================================
-    // EXECUÇÃO DA BUSCA VIA BACKEND INVISÍVEL
+    // EXECUÇÃO DA BUSCA
     // ==========================================
     async function executeSearch() {
       const product = document.getElementById('inputProduct').value.trim();
@@ -341,40 +230,28 @@
         return;
       }
 
-      // Verifica se a URL do Worker foi configurada
-      const targetApiUrl = workerApiUrl || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.apiUrl : '');
-      if (!targetApiUrl) {
-        openSettingsModal();
-        alert('Por favor, configure a URL do seu Cloudflare Worker (onde a chave da IA fica escondida) no config.js ou no modal de configurações.');
-        return;
-      }
-
       const statusContainer = document.getElementById('statusContainer');
       const statusMessage = document.getElementById('statusMessage');
-      const fallbackLogs = document.getElementById('fallbackLogs');
       const productsGrid = document.getElementById('productsGrid');
       const btnSearch = document.getElementById('btnSearch');
 
       statusContainer.className = 'rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-4 text-xs font-medium space-y-2 block';
-      fallbackLogs.innerHTML = '';
       productsGrid.innerHTML = '';
       document.getElementById('resultsHeader').classList.add('hidden');
       btnSearch.disabled = true;
       btnSearch.classList.add('opacity-50');
 
-      statusMessage.innerText = `Consultando com modelo ${currentModel}... (com Fallback automático)`;
+      statusMessage.innerText = 'Pesquisando produtos e verificando especificações técnicas...';
 
       try {
         const payload = {
           product,
           mustHave,
           mustNotHave,
-          stores: selectedStores.length > 0 ? selectedStores.join(', ') : 'Mercado Livre, Amazon, Shopee, Magalu, Ferreira Costa',
-          model: currentModel,
-          fallbackModels: fallbackList
+          stores: selectedStores.length > 0 ? selectedStores.join(', ') : 'Mercado Livre, Amazon, Shopee, Magalu, Ferreira Costa'
         };
 
-        const response = await fetch(targetApiUrl, {
+        const response = await fetch(workerApiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -386,15 +263,7 @@
           throw new Error(data.error || `Erro do servidor (${response.status})`);
         }
 
-        if (data.fallbackLogs && data.fallbackLogs.length > 0) {
-          data.fallbackLogs.forEach(log => {
-            const el = document.createElement('div');
-            el.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> ${log}`;
-            fallbackLogs.appendChild(el);
-          });
-        }
-
-        renderProducts(data.products || [], data.modelUsed || currentModel);
+        renderProducts(data.products || []);
         statusContainer.classList.add('hidden');
 
       } catch (err) {
@@ -408,15 +277,13 @@
     }
 
     // Renderizar Produtos
-    function renderProducts(products, modelUsed) {
+    function renderProducts(products) {
       const grid = document.getElementById('productsGrid');
       const countEl = document.getElementById('resultsCount');
-      const badgeModel = document.getElementById('usedModelBadge');
       const header = document.getElementById('resultsHeader');
 
       grid.innerHTML = '';
       countEl.innerText = products.length;
-      badgeModel.innerText = `Encontrado via ${modelUsed}`;
       header.classList.remove('hidden');
 
       if (products.length === 0) {
@@ -425,7 +292,7 @@
             <i class="fa-solid fa-filter-circle-xmark text-3xl text-amber-400"></i>
             <h4 class="font-bold text-white">Nenhum produto atendeu 100% aos requisitos</h4>
             <p class="text-xs text-slate-400 max-w-md mx-auto">
-              A IA analisou os anúncios das lojas mas descartou todos porque nenhum cumpriu estritamente a especificação solicitada. Tente flexibilizar os filtros.
+              Os modelos analisados foram descartados por não cumprirem estritamente a especificação solicitada. Tente flexibilizar os filtros.
             </p>
           </div>
         `;

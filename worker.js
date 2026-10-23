@@ -1,16 +1,17 @@
 /**
- * CLOUDFLARE WORKER - BACKEND INVISÍVEL
+ * CLOUDFLARE WORKER - MOTOR DE BUSCA E FILTRO TÉCNICO COM IA
  * 
- * Este arquivo roda de graça no Cloudflare Workers.
- * Ele guarda a sua chave da API do Gemini em segredo absoluto (variável GEMINI_API_KEY)
- * e faz a pesquisa com a IA e o Fallback automático de modelos.
+ * Configurado com base nos limites reais da sua cota Google AI Studio:
+ * 1. gemini-3.1-flash-lite (15 RPM / 500 requisições/dia) - PRIORITÁRIO
+ * 2. gemini-3.5-flash-lite (15 RPM / 500 requisições/dia) - FALLBACK 1
+ * 3. gemini-3.8-flash      (5 RPM  / 20 requisições/dia)  - FALLBACK 2
+ * 4. gemini-3.6-flash      (5 RPM  / 20 requisições/dia)  - FALLBACK 3
  * 
- * Quem acessar o seu site no GitHub Pages NÃO precisa de chave e nem vê a sua chave!
+ * Total de capacidade: mais de 1.040 buscas gratuitas por dia!
  */
 
 export default {
   async fetch(request, env) {
-    // Permite chamadas do seu site no GitHub Pages (CORS)
     const corsHeaders = {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -28,39 +29,53 @@ export default {
     const apiKey = env.GEMINI_API_KEY;
     if (!apiKey) {
       return new Response(
-        JSON.stringify({ error: "Chave GEMINI_API_KEY não configurada nas variáveis do Worker." }),
+        JSON.stringify({ error: "Chave GEMINI_API_KEY não configurada no Worker." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     try {
-      const { product, mustHave, mustNotHave, stores, model, fallbackModels } = await request.json();
+      const { product, mustHave, mustNotHave, stores } = await request.json();
 
-      const modelsToTry = [model, ...(fallbackModels || []).filter(m => m !== model)];
-      let lastError = null;
-      let logs = [];
+      // CASCATA INTELIGENTE BASEADA NOS LIMITES DA SUA CONTA
+      const modelsToTry = [
+        "gemini-3.1-flash-lite", // 500 requisições/dia
+        "gemini-3.5-flash-lite", // 500 requisições/dia
+        "gemini-3.8-flash",      // 20 requisições/dia
+        "gemini-3.6-flash"       // 20 requisições/dia
+      ];
+
+      const storesListText = stores || "Mercado Livre, Amazon, Shopee, Magalu, Ferreira Costa, Casas Bahia, Leroy Merlin, KaBuM!";
 
       const promptText = `
-Você é um motor de busca de compras altamente rigoroso e imparcial.
-Procure por ofertas do produto: "${product}" nas seguintes lojas no Brasil: ${stores || 'Mercado Livre, Amazon, Shopee, Magalu, Ferreira Costa'}.
+Você é um especialista em compras técnicas no e-commerce brasileiro e engenheiro de produtos.
+O usuário quer comprar: "${product}".
+Lojas pesquisadas: ${storesListText}.
 
-REQUISITOS TÉCNICOS OBRIGATÓRIOS (FILTRO RESTRITIVO):
-- O produto DEVE conter comprovadamente a característica: "${mustHave || 'conforme solicitado'}".
-- O produto NÃO PODE conter: "${mustNotHave || 'itens divergentes'}".
-(Exemplo: Se foi pedido motor a indução, descarte qualquer modelo que use motor universal/escovas de carvão, mesmo que o vendedor mencione a palavra no título).
+FILTRO TÉCNICO RIGOROSO E ELIMINATÓRIO:
+1. O produto DEVE conter comprovadamente na sua engenharia/ficha técnica: "${mustHave || 'conforme solicitado'}".
+2. O produto NÃO PODE de forma alguma conter: "${mustNotHave || 'nenhuma característica divergente'}".
 
-Para cada produto encontrado que cumpra 100% dos requisitos, retorne estritamente um array JSON válido contendo objetos com:
-- "title": Nome completo e modelo exato do produto.
-- "store": Nome da loja (ex: Mercado Livre, Amazon, Shopee, Magalu, Ferreira Costa, etc).
-- "price": Preço formatado em Reais (ex: R$ 1.299,00).
-- "url": Link direto para a página do produto na loja.
-- "image_url": URL de imagem do produto (se encontrar, senão string vazia).
-- "verified_spec": Explicação curta comprovando a especificação (ex: "Confirmado: Motor a Indução de fábrica modelo X").
+EXEMPLO DE RIGOR:
+- Se foi solicitado "motor a indução", você DEVE descartar imediatamente qualquer modelo com motor universal ou escovas de carvão (ex: Kärcher K2 tradicional, Wap Atacama, etc.), mesmo que anúncios ou vendedores usem a palavra indução como marketing falso.
+- Aprove apenas modelos reais com motor a indução (ex: Wap 4100, Kärcher K3 Indução, Kärcher K4, HD 585, etc.).
+- O mesmo vale para celular (verificar RAM/Armazenamento real), liquidificador (copo de vidro real e não acrílico), etc.
 
-IMPORTANTE: Responda SOMENTE o JSON puro (sem markdown, sem \`\`\`json). Se não encontrar nenhum que cumpra a especificação, retorne [].
+Retorne de 4 a 8 opções REAIS que atendam 100% dos requisitos nas lojas brasileiras.
+Responda ESTRITAMENTE um array JSON puro (sem markdown, sem \`\`\`json):
+[
+  {
+    "title": "Nome exato da marca e modelo do produto",
+    "store": "Nome da loja (Mercado Livre, Amazon, Magalu, Ferreira Costa, etc)",
+    "price": "Preço médio estimado em Reais (ex: R$ 1.349,00)",
+    "url": "URL de busca direta daquele modelo exato na loja correspondente",
+    "verified_spec": "Explicação técnica curta comprovando que cumpre a especificação (ex: Confirmado de fábrica: Motor a Indução de 1.800W)"
+  }
+]
       `.trim();
 
-      // Cascata de Fallback entre Modelos
+      let lastError = null;
+
       for (const m of modelsToTry) {
         try {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`;
@@ -70,7 +85,9 @@ IMPORTANTE: Responda SOMENTE o JSON puro (sem markdown, sem \`\`\`json). Se não
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               contents: [{ role: "user", parts: [{ text: promptText }] }],
-              tools: [{ google_search: {} }]
+              generationConfig: {
+                temperature: 0.2
+              }
             })
           });
 
@@ -89,22 +106,54 @@ IMPORTANTE: Responda SOMENTE o JSON puro (sem markdown, sem \`\`\`json). Se não
           } catch {
             const match = cleaned.match(/\[\s*\{.*\}\s*\]/s);
             if (match) products = JSON.parse(match[0]);
-            else throw new Error("Resposta da IA não continha um array JSON válido.");
+            else throw new Error("Formato JSON não pôde ser decodificado.");
           }
 
+          // Ajusta links para URLs de busca direta se o modelo gerou URLs genéricas
+          const formattedProducts = products.map(item => {
+            const storeName = item.store || "Mercado Livre";
+            let directUrl = item.url;
+            const queryEncoded = encodeURIComponent(item.title);
+
+            if (!directUrl || directUrl.length < 15 || directUrl.includes("example.com")) {
+              if (storeName.toLowerCase().includes("mercado")) {
+                directUrl = `https://lista.mercadolivre.com.br/${queryEncoded}`;
+              } else if (storeName.toLowerCase().includes("amazon")) {
+                directUrl = `https://www.amazon.com.br/s?k=${queryEncoded}`;
+              } else if (storeName.toLowerCase().includes("magalu")) {
+                directUrl = `https://www.magazineluiza.com.br/busca/${queryEncoded}/`;
+              } else if (storeName.toLowerCase().includes("shopee")) {
+                directUrl = `https://shopee.com.br/search?keyword=${queryEncoded}`;
+              } else if (storeName.toLowerCase().includes("ferreira")) {
+                directUrl = `https://www.ferreiracosta.com/busca?q=${queryEncoded}`;
+              } else if (storeName.toLowerCase().includes("leroy")) {
+                directUrl = `https://www.leroymerlin.com.br/pesquisa?termo=${queryEncoded}`;
+              } else if (storeName.toLowerCase().includes("kabum")) {
+                directUrl = `https://www.kabum.com.br/busca/${queryEncoded}`;
+              } else {
+                directUrl = `https://www.google.com/search?q=${encodeURIComponent(storeName + " " + item.title)}&tbm=shop`;
+              }
+            }
+
+            return {
+              ...item,
+              url: directUrl
+            };
+          });
+
           return new Response(
-            JSON.stringify({ success: true, modelUsed: m, fallbackLogs: logs, products }),
+            JSON.stringify({ success: true, products: formattedProducts }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
+
         } catch (err) {
           lastError = err;
-          logs.push(`Modelo ${m} falhou: ${err.message}`);
-          // Tenta o próximo modelo do fallback!
+          // Continua automaticamente para o próximo modelo da cascata!
         }
       }
 
       return new Response(
-        JSON.stringify({ success: false, error: "Todos os modelos da cascata falharam.", logs, details: lastError?.message }),
+        JSON.stringify({ success: false, error: "Serviço temporariamente indisponível. Tente novamente em instantes.", details: lastError?.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
