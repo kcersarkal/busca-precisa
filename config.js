@@ -10,16 +10,13 @@ const APP_CONFIG = {
   apiUrl: "https://busca-precisa-api.kcersar-kal.workers.dev",
 
   // Modelo padrão prioritário (editável pelo celular!)
-  currentModel: "gemini-2.5-flash",
+  currentModel: "gemini-3.8-flash",
 
   // CASCATA DE FALLBACK DE MODELOS:
   // Se o 1º falhar (cota, erro ou fora do ar), tenta o 2º, depois o 3º, etc.
   fallbackModels: [
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-2.5-pro",
-    "gemini-1.5-pro"
+    "gemini-3.8-flash",
+    "gemini-3-flash-preview"
   ],
 
   // Lojas monitoradas na pesquisa
