@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buscador Inteligente de Produtos com IA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="config.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .glass-header {
+      backdrop-filter: blur(12px);
+      background-color: rgba(15, 23, 42, 0.85);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- TOP BAR / HEADER -->
+  <header class="sticky top-0 z-40 border-b border-slate-800 glass-header px-4 py-3">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <i class="fa-solid fa-bolt-lightning text-white text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-base md:text-lg leading-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">
+            BuscaPrecisa
+          </h1>
+          <p class="text-[11px] text-slate-400 font-medium">Filtro Técnico Real em Múltiplas Lojas</p>
+        </div>
+      </div>
+
+      <!-- STATUS DO MODELO E CONFIGURAÇÃO -->
+      <div class="flex items-center space-x-2">
+        <button id="btnOpenSettings" onclick="openSettingsModal()" class="flex items-center space-x-2 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300 transition-all hover:border-indigo-500/60 shadow-sm">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="headerModelBadge" class="truncate max-w-[120px] md:max-w-none">gemini-2.5-flash</span>
+          <i class="fa-solid fa-sliders text-slate-400 text-[10px] ml-1"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-6 md:py-10 space-y-6">
+
+    <!-- ÁREA DE APRESENTAÇÃO / HERO -->
+    <div class="text-center space-y-2 mb-4">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+        <i class="fa-solid fa-shield-check text-xs"></i> Sem anúncios falsos • Comprovado na Ficha Técnica
+      </span>
+      <h2 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+        Encontre o produto com a <span class="text-indigo-400">especificação exata</span>
+      </h2>
+      <p class="text-xs md:text-sm text-slate-400 max-w-xl mx-auto">
+        A IA pesquisa na Amazon, Mercado Livre, Shopee, Magalu, Ferreira Costa e descarta modelos que mentem nas palavras-chave.
+      </p>
+    </div>
+
+    <!-- CARD DO FORMULÁRIO DE PESQUISA -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 md:p-6 shadow-xl space-y-4">
+      
+      <!-- 1. Campo Principal do Produto -->
+      <div>
+        <label for="inputProduct" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+          <i class="fa-solid fa-magnifying-glass text-indigo-400 mr-1"></i> O que você quer comprar?
+        </label>
+        <div class="relative">
+          <input 
+            type="text" 
+            id="inputProduct" 
+            placeholder="Ex: Lavadora de alta pressão, Celular, Liquidificador, Furadeira..."
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3.5 text-sm md:text-base text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
+            onkeydown="if(event.key === 'Enter') executeSearch()"
+          />
+        </div>
+      </div>
+
+      <!-- 2. Filtros Técnicos Rigorosos (Obrigatórios e Proibidos) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+        <!-- Obrigatório -->
+        <div class="bg-slate-950/60 border border-emerald-500/20 rounded-xl p-3">
+          <label for="inputMustHave" class="block text-xs font-bold text-emerald-400 mb-1">
+            <i class="fa-solid fa-check-double mr-1"></i> Deve ter obrigatoriamente:
+          </label>
+          <input 
+            type="text" 
+            id="inputMustHave" 
+            placeholder="Ex: motor a indução, 256gb, copo de vidro"
+            class="w-full bg-transparent border-0 text-xs md:text-sm text-white placeholder-slate-600 focus:outline-none font-medium"
+          />
+          <p class="text-[10px] text-slate-500 mt-1">A IA descarta qualquer item sem essa característica real.</p>
+        </div>
+
+        <!-- Proibido -->
+        <div class="bg-slate-950/60 border border-rose-500/20 rounded-xl p-3">
+          <label for="inputMustNotHave" class="block text-xs font-bold text-rose-400 mb-1">
+            <i class="fa-solid fa-ban mr-1"></i> Não pode ter (Descartar):
+          </label>
+          <input 
+            type="text" 
+            id="inputMustNotHave" 
+            placeholder="Ex: escova, motor universal, 128gb, plástico"
+            class="w-full bg-transparent border-0 text-xs md:text-sm text-white placeholder-slate-600 focus:outline-none font-medium"
+          />
+          <p class="text-[10px] text-slate-500 mt-1">Elimina anúncios enganosos que usam essas palavras.</p>
+        </div>
+      </div>
+
+      <!-- 3. Seleção de Lojas -->
+      <div class="pt-2 border-t border-slate-800/80">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold text-slate-400">Lojas pesquisadas:</span>
+          <button type="button" onclick="toggleAllStores()" id="btnToggleStores" class="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium">
+            Desmarcar todas
+          </button>
+        </div>
+        <div id="storeBadgesContainer" class="flex flex-wrap gap-1.5">
+          <!-- Gerado via JavaScript baseado no config.js -->
+        </div>
+      </div>
+
+      <!-- BOTÃO BUSCAR -->
+      <div class="pt-2">
+        <button 
+          id="btnSearch" 
+          onclick="executeSearch()"
+          class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center space-x-2 text-sm md:text-base active:scale-[0.99]"
+        >
+          <i class="fa-solid fa-magnifying-glass-arrow-right text-base"></i>
+          <span>Buscar Produtos Verificados</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- PAINEL DE FALLBACK E STATUS EM TEMPO REAL -->
+    <div id="statusContainer" class="hidden rounded-xl border p-4 text-xs font-medium space-y-2 transition-all">
+      <div class="flex items-center space-x-2">
+        <div id="statusSpinner" class="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+        <span id="statusMessage" class="text-slate-300 font-semibold">Pesquisando produtos com a IA...</span>
+      </div>
+      <div id="fallbackLogs" class="text-[11px] text-amber-300/90 pl-6 space-y-1"></div>
+    </div>
+
+    <!-- RESULTADOS DA BUSCA -->
+    <div id="resultsSection" class="space-y-4">
+      <div id="resultsHeader" class="hidden items-center justify-between">
+        <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">
+          <span id="resultsCount">0</span> produtos encontrados
+        </h3>
+        <span id="usedModelBadge" class="text-[11px] px-2.5 py-1 rounded-md bg-slate-800 text-slate-400 border border-slate-700"></span>
+      </div>
+
+      <!-- GRID DOS CARDS DE PRODUTOS -->
+      <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Injetado via JS -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL DE CONFIGURAÇÃO DO MODELO / CHAVE / FALLBACK -->
+  <div id="settingsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
+      
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-microchip text-indigo-400"></i>
+          <h3 class="font-bold text-white text-base">Modelos & Fallback IA</h3>
+        </div>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Chave da API -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold text-slate-300">
+          Chave Gemini API (Google AI Studio)
+        </label>
+        <input 
+          type="password" 
+          id="settingApiKey" 
+          placeholder="Cole sua chave AIzaSy... (gratuita)" 
+          class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono"
+        />
+        <p class="text-[10px] text-slate-500">
+          Fica salva apenas no seu navegador. Se colocada no <code class="text-indigo-400">config.js</code>, já vem preenchida.
+        </p>
+      </div>
+
+      <!-- Modelo Ativo Escolhido -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold text-slate-300">
+          Modelo Ativo (Tentativa Principal)
+        </label>
+        <select 
+          id="settingCurrentModel" 
+          class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-medium"
+        >
+          <!-- Opções preenchidas dinamicamente -->
+        </select>
+        <p class="text-[10px] text-slate-500">
+          Você também pode editar isso no arquivo <code class="text-indigo-400">config.js</code> pelo celular no GitHub!
+        </p>
+      </div>
+
+      <!-- Ordem da Cascata de Fallback -->
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold text-slate-300">
+          Ordem da Cascata de Fallback
+        </label>
+        <div id="fallbackOrderList" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 space-y-1.5 text-xs text-slate-300 font-mono">
+          <!-- Lista gerada por JS -->
+        </div>
+        <p class="text-[10px] text-slate-500">
+          Se o modelo 1 falhar, o app pula automaticamente para o 2, depois para o 3.
+        </p>
+      </div>
+
+      <!-- Botão Salvar -->
+      <div class="pt-2 flex justify-end space-x-2">
+        <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">
+          Cancelar
+        </button>
+        <button onclick="saveSettings()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition-all shadow-md">
+          Salvar Alterações
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO -->
+  <script>
+    // Inicialização de Estado
+    let userApiKey = localStorage.getItem('gemini_api_key') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.apiKey : '') || '';
+    let currentModel = localStorage.getItem('gemini_selected_model') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.currentModel : 'gemini-2.5-flash');
+    let fallbackList = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.fallbackModels) ? [...APP_CONFIG.fallbackModels] : ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    let selectedStores = [];
+
+    // Carregar na Inicialização
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('headerModelBadge').innerText = currentModel;
+      renderStoreBadges();
+      populateSettingsModal();
+    });
+
+    // Renderizar Lojas
+    function renderStoreBadges() {
+      const container = document.getElementById('storeBadgesContainer');
+      container.innerHTML = '';
+      const stores = APP_CONFIG.stores || [];
+      selectedStores = stores.map(s => s.name);
+
+      stores.forEach(store => {
+        const badge = document.createElement('button');
+        badge.type = 'button';
+        badge.id = `badge-${store.name.replace(/\s+/g, '')}`;
+        badge.onclick = () => toggleStore(store.name);
+        badge.className = `px-2.5 py-1 rounded-full text-xs font-semibold transition-all border ${
+          selectedStores.includes(store.name)
+            ? 'bg-slate-800 text-white border-indigo-500/50 shadow-sm'
+            : 'bg-slate-950/60 text-slate-500 border-slate-800 opacity-60'
+        }`;
+        badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full inline-block mr-1.5" style="background-color: ${store.color}"></span>${store.name}`;
+        container.appendChild(badge);
+      });
+    }
+
+    function toggleStore(storeName) {
+      if (selectedStores.includes(storeName)) {
+        selectedStores = selectedStores.filter(s => s !== storeName);
+      } else {
+        selectedStores.push(storeName);
+      }
+      renderStoreBadges();
+    }
+
+    let allStoresSelected = true;
+    function toggleAllStores() {
+      const btn = document.getElementById('btnToggleStores');
+      if (allStoresSelected) {
+        selectedStores = [];
+        btn.innerText = 'Selecionar todas';
+        allStoresSelected = false;
+      } else {
+        selectedStores = APP_CONFIG.stores.map(s => s.name);
+        btn.innerText = 'Desmarcar todas';
+        allStoresSelected = true;
+      }
+      renderStoreBadges();
+    }
+
+    // Modal de Configuração
+    function openSettingsModal() {
+      document.getElementById('settingApiKey').value = userApiKey;
+      const select = document.getElementById('settingCurrentModel');
+      select.innerHTML = '';
+      fallbackList.forEach(model => {
+        const opt = document.createElement('option');
+        opt.value = model;
+        opt.innerText = model;
+        if (model === currentModel) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      const listDiv = document.getElementById('fallbackOrderList');
+      listDiv.innerHTML = fallbackList.map((m, idx) => `
+        <div class="flex items-center justify-between py-0.5">
+          <span class="text-slate-400">${idx + 1}. ${m}</span>
+          ${idx === 0 ? '<span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 rounded">Prioritário</span>' : '<span class="text-[10px] text-slate-500">Fallback</span>'}
+        </div>
+      `).join('');
+
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    function saveSettings() {
+      userApiKey = document.getElementById('settingApiKey').value.trim();
+      currentModel = document.getElementById('settingCurrentModel').value;
+      localStorage.setItem('gemini_api_key', userApiKey);
+      localStorage.setItem('gemini_selected_model', currentModel);
+      document.getElementById('headerModelBadge').innerText = currentModel;
+      closeSettingsModal();
+    }
+
+    // ==========================================
+    // EXECUÇÃO DA BUSCA COM AUTO-FALLBACK DE IA
+    // ==========================================
+    async function executeSearch() {
+      const product = document.getElementById('inputProduct').value.trim();
+      const mustHave = document.getElementById('inputMustHave').value.trim();
+      const mustNotHave = document.getElementById('inputMustNotHave').value.trim();
+
+      if (!product) {
+        alert('Por favor, digite o nome do produto que deseja procurar.');
+        return;
+      }
+
+      if (!userApiKey) {
+        openSettingsModal();
+        alert('Por favor, informe sua Chave Gemini API (gratuita no Google AI Studio) para realizar a busca.');
+        return;
+      }
+
+      // Prepara interface de status
+      const statusContainer = document.getElementById('statusContainer');
+      const statusMessage = document.getElementById('statusMessage');
+      const fallbackLogs = document.getElementById('fallbackLogs');
+      const resultsSection = document.getElementById('resultsSection');
+      const productsGrid = document.getElementById('productsGrid');
+      const btnSearch = document.getElementById('btnSearch');
+
+      statusContainer.className = 'rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-4 text-xs font-medium space-y-2 block';
+      fallbackLogs.innerHTML = '';
+      productsGrid.innerHTML = '';
+      document.getElementById('resultsHeader').classList.add('hidden');
+      btnSearch.disabled = true;
+      btnSearch.classList.add('opacity-50');
+
+      // Ordem de teste: modelo selecionado primeiro, depois os restantes da lista
+      const modelsToTry = [currentModel, ...fallbackList.filter(m => m !== currentModel)];
+      let success = false;
+      let lastError = null;
+
+      const storesListText = selectedStores.length > 0 ? selectedStores.join(', ') : 'Mercado Livre, Amazon, Shopee, Magalu, Ferreira Costa';
+
+      // Monta Prompt Estruturado com Filtro Rigoroso
+      const promptText = `
+Você é um motor de busca de compras altamente rigoroso e imparcial.
+Procure por ofertas do produto: "${product}" nas seguintes lojas no Brasil: ${storesListText}.
+
+REQUISITOS TÉCNICOS OBRIGATÓRIOS (FILTRO RESTRITIVO):
+- O produto DEVE conter comprovadamente a característica: "${mustHave || 'conforme solicitado'}".
+- O produto NÃO PODE conter: "${mustNotHave || 'itens divergentes'}".
+(Exemplo: Se foi pedido motor a indução, descarte qualquer modelo que use motor universal/escovas de carvão, mesmo que o vendedor mencione a palavra no título).
+
+Para cada produto encontrado que cumpra 100% dos requisitos, retorne estritamente um array JSON válido contendo objetos com:
+- "title": Nome completo e modelo exato do produto.
+- "store": Nome da loja (ex: Mercado Livre, Amazon, Shopee, Magalu, Ferreira Costa, etc).
+- "price": Preço formatado em Reais (ex: R$ 1.299,00).
+- "url": Link direto para a página do produto na loja.
+- "image_url": URL de imagem do produto (se encontrar, senão string vazia).
+- "verified_spec": Explicação curta comprovando a especificação (ex: "Confirmado: Motor a Indução de fábrica modelo X").
+
+IMPORTANTE: Responda SOMENTE o JSON puro (sem markdown, sem \`\`\`json). Se não encontrar nenhum que cumpra a especificação, retorne [].
+      `.trim();
+
+      // Loop do Fallback de Modelos
+      for (let i = 0; i < modelsToTry.length; i++) {
+        const model = modelsToTry[i];
+        statusMessage.innerText = `Pesquisando com modelo ${model}...`;
+
+        try {
+          const result = await callGeminiWithSearch(model, userApiKey, promptText);
+          if (result && Array.isArray(result)) {
+            success = true;
+            renderProducts(result, model);
+            statusContainer.classList.add('hidden');
+            break;
+          }
+        } catch (err) {
+          console.warn(`Falha no modelo ${model}:`, err);
+          lastError = err;
+          const logEntry = document.createElement('div');
+          logEntry.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Modelo <strong>${model}</strong> indisponível (${err.message || 'Erro'}). Alternando para o próximo da cascata...`;
+          fallbackLogs.appendChild(logEntry);
+        }
+      }
+
+      btnSearch.disabled = false;
+      btnSearch.classList.remove('opacity-50');
+
+      if (!success) {
+        statusContainer.className = 'rounded-xl border border-rose-500/40 bg-rose-950/20 p-4 text-xs font-medium space-y-2 block';
+        statusMessage.innerHTML = `<span class="text-rose-400 font-bold">Todos os modelos da cascata falharam.</span> Verifique sua chave API ou tente novamente em alguns instantes. Detalhe: ${lastError ? lastError.message : 'Erro desconhecido'}`;
+      }
+    }
+
+    // Chamada à API Gemini com Google Search Grounding
+    async function callGeminiWithSearch(model, apiKey, prompt) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      
+      const payload = {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }]
+          }
+        ],
+        tools: [
+          {
+            google_search: {}
+          }
+        ]
+      };
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      
+      // Limpeza de blocos de código se a IA mandar ```json
+      const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+      
+      try {
+        return JSON.parse(cleaned);
+      } catch (parseError) {
+        // Tenta extrair array usando regex se vier texto em volta
+        const arrayMatch = cleaned.match(/\[\s*\{.*\}\s*\]/s);
+        if (arrayMatch) {
+          return JSON.parse(arrayMatch[0]);
+        }
+        throw new Error("Não foi possível decodificar os produtos retornados pela IA.");
+      }
+    }
+
+    // Renderizar Cards de Produtos na Tela
+    function renderProducts(products, modelUsed) {
+      const grid = document.getElementById('productsGrid');
+      const countEl = document.getElementById('resultsCount');
+      const badgeModel = document.getElementById('usedModelBadge');
+      const header = document.getElementById('resultsHeader');
+
+      grid.innerHTML = '';
+      countEl.innerText = products.length;
+      badgeModel.innerText = `Encontrado via ${modelUsed}`;
+      header.classList.remove('hidden');
+
+      if (products.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-2">
+            <i class="fa-solid fa-filter-circle-xmark text-3xl text-amber-400"></i>
+            <h4 class="font-bold text-white">Nenhum produto atendeu 100% aos requisitos</h4>
+            <p class="text-xs text-slate-400 max-w-md mx-auto">
+              A IA analisou os anúncios das lojas mas descartou todos porque nenhum cumpriu estritamente a especificação solicitada. Tente flexibilizar os filtros.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      products.forEach(item => {
+        // Encontra cor da loja no config
+        const storeInfo = (APP_CONFIG.stores || []).find(s => s.name.toLowerCase() === (item.store || '').toLowerCase()) || {
+          color: '#6366F1',
+          textColor: '#ffffff'
+        };
+
+        const card = document.createElement('div');
+        card.className = "bg-slate-900/90 border border-slate-800 hover:border-slate-700 rounded-2xl p-4 flex flex-col justify-between shadow-lg transition-all hover:translate-y-[-2px] hover:shadow-indigo-500/10";
+        
+        card.innerHTML = `
+          <div class="space-y-3">
+            <!-- Topo do Card: Loja e Preço -->
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm" style="background-color: ${storeInfo.color}; color: ${storeInfo.textColor}">
+                ${item.store || 'Loja Online'}
+              </span>
+              <span class="text-base font-extrabold text-emerald-400 font-mono">
+                ${item.price || 'Consulte'}
+              </span>
+            </div>
+
+            <!-- Título do Produto -->
+            <h4 class="text-sm font-bold text-white line-clamp-2 leading-snug" title="${item.title}">
+              ${item.title}
+            </h4>
+
+            <!-- Selo de Especificação Técnica Verificada -->
+            ${item.verified_spec ? `
+              <div class="bg-emerald-950/40 border border-emerald-500/30 rounded-lg p-2 text-[11px] text-emerald-300 flex items-start space-x-1.5">
+                <i class="fa-solid fa-circle-check text-emerald-400 text-xs mt-0.5 shrink-0"></i>
+                <span class="leading-tight">${item.verified_spec}</span>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- Botão Link Direto para a Loja -->
+          <div class="pt-4 mt-2 border-t border-slate-800/80">
+            <a 
+              href="${item.url}" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="w-full bg-slate-800 hover:bg-indigo-600 text-white font-semibold py-2 px-3 rounded-xl text-xs flex items-center justify-center space-x-1.5 transition-all"
+            >
+              <span>Ver na Loja Oficial</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>
