@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Buscador Inteligente de Produtos com IA</title>
+  <title>BuscaPrecisa - Buscador Inteligente de Produtos</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="config.js"></script>
@@ -47,7 +47,7 @@
   <!-- CONTEÚDO PRINCIPAL -->
   <main class="flex-grow max-w-4xl w-full mx-auto px-4 py-6 md:py-10 space-y-6">
 
-    <!-- ÁREA DE APRESENTAÇÃO / HERO -->
+    <!-- HERO -->
     <div class="text-center space-y-2 mb-4">
       <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
         <i class="fa-solid fa-shield-check text-xs"></i> Sem anúncios falsos • Comprovado na Ficha Técnica
@@ -56,30 +56,28 @@
         Encontre o produto com a <span class="text-indigo-400">especificação exata</span>
       </h2>
       <p class="text-xs md:text-sm text-slate-400 max-w-xl mx-auto">
-        A IA pesquisa na Amazon, Mercado Livre, Shopee, Magalu, Ferreira Costa e descarta modelos que mentem nas palavras-chave.
+        Pesquisa em múltiplas lojas ao mesmo tempo e descarta anúncios que mentem nas palavras-chave.
       </p>
     </div>
 
-    <!-- CARD DO FORMULÁRIO DE PESQUISA -->
+    <!-- FORMULÁRIO DE BUSCA -->
     <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 md:p-6 shadow-xl space-y-4">
       
-      <!-- 1. Campo Principal do Produto -->
+      <!-- 1. Campo Principal -->
       <div>
         <label for="inputProduct" class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
           <i class="fa-solid fa-magnifying-glass text-indigo-400 mr-1"></i> O que você quer comprar?
         </label>
-        <div class="relative">
-          <input 
-            type="text" 
-            id="inputProduct" 
-            placeholder="Ex: Lavadora de alta pressão, Celular, Liquidificador, Furadeira..."
-            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3.5 text-sm md:text-base text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
-            onkeydown="if(event.key === 'Enter') executeSearch()"
-          />
-        </div>
+        <input 
+          type="text" 
+          id="inputProduct" 
+          placeholder="Ex: Lavadora de alta pressão, Celular, Liquidificador, Furadeira..."
+          class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3.5 text-sm md:text-base text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
+          onkeydown="if(event.key === 'Enter') executeSearch()"
+        />
       </div>
 
-      <!-- 2. Filtros Técnicos Rigorosos (Obrigatórios e Proibidos) -->
+      <!-- 2. Filtros Rigorosos (Obrigatório / Proibido) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
         <!-- Obrigatório -->
         <div class="bg-slate-950/60 border border-emerald-500/20 rounded-xl p-3">
@@ -119,11 +117,11 @@
           </button>
         </div>
         <div id="storeBadgesContainer" class="flex flex-wrap gap-1.5">
-          <!-- Gerado via JavaScript baseado no config.js -->
+          <!-- Badges gerados por JS -->
         </div>
       </div>
 
-      <!-- BOTÃO BUSCAR -->
+      <!-- BOTÃO DE BUSCA -->
       <div class="pt-2">
         <button 
           id="btnSearch" 
@@ -137,7 +135,7 @@
 
     </div>
 
-    <!-- PAINEL DE FALLBACK E STATUS EM TEMPO REAL -->
+    <!-- PAINEL DE STATUS E FALLBACK -->
     <div id="statusContainer" class="hidden rounded-xl border p-4 text-xs font-medium space-y-2 transition-all">
       <div class="flex items-center space-x-2">
         <div id="statusSpinner" class="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
@@ -146,7 +144,7 @@
       <div id="fallbackLogs" class="text-[11px] text-amber-300/90 pl-6 space-y-1"></div>
     </div>
 
-    <!-- RESULTADOS DA BUSCA -->
+    <!-- RESULTADOS -->
     <div id="resultsSection" class="space-y-4">
       <div id="resultsHeader" class="hidden items-center justify-between">
         <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">
@@ -157,100 +155,98 @@
 
       <!-- GRID DOS CARDS DE PRODUTOS -->
       <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Injetado via JS -->
+        <!-- Injetado por JS -->
       </div>
     </div>
 
   </main>
 
-  <!-- MODAL DE CONFIGURAÇÃO DO MODELO / CHAVE / FALLBACK -->
+  <!-- MODAL DE CONFIGURAÇÃO (ADMIN / MODELOS) -->
   <div id="settingsModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
       
       <div class="flex items-center justify-between pb-3 border-b border-slate-800">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-microchip text-indigo-400"></i>
-          <h3 class="font-bold text-white text-base">Modelos & Fallback IA</h3>
+          <h3 class="font-bold text-white text-base">Configurações & Modelos</h3>
         </div>
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white p-1">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
 
-      <!-- Chave da API -->
+      <!-- URL do Backend Invisível (Cloudflare Worker) -->
       <div class="space-y-1.5">
         <label class="block text-xs font-semibold text-slate-300">
-          Chave Gemini API (Google AI Studio)
+          URL do Cloudflare Worker (Chave Escondida)
         </label>
         <input 
-          type="password" 
-          id="settingApiKey" 
-          placeholder="Cole sua chave AIzaSy... (gratuita)" 
+          type="text" 
+          id="settingApiUrl" 
+          placeholder="https://busca-precisa.seu-nome.workers.dev" 
           class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono"
         />
         <p class="text-[10px] text-slate-500">
-          Fica salva apenas no seu navegador. Se colocada no <code class="text-indigo-400">config.js</code>, já vem preenchida.
+          Deixe no <code class="text-indigo-400">config.js</code> para que todos os visitantes usem sem precisar configurar nada.
         </p>
       </div>
 
       <!-- Modelo Ativo Escolhido -->
       <div class="space-y-1.5">
         <label class="block text-xs font-semibold text-slate-300">
-          Modelo Ativo (Tentativa Principal)
+          Modelo Prioritário (Tentativa 1)
         </label>
         <select 
           id="settingCurrentModel" 
           class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-medium"
         >
-          <!-- Opções preenchidas dinamicamente -->
+          <!-- Preenchido via JS -->
         </select>
         <p class="text-[10px] text-slate-500">
-          Você também pode editar isso no arquivo <code class="text-indigo-400">config.js</code> pelo celular no GitHub!
+          Também pode ser alterado diretamente no arquivo <code class="text-indigo-400">config.js</code> pelo celular no GitHub!
         </p>
       </div>
 
-      <!-- Ordem da Cascata de Fallback -->
+      <!-- Cascata de Fallback -->
       <div class="space-y-1.5">
         <label class="block text-xs font-semibold text-slate-300">
           Ordem da Cascata de Fallback
         </label>
         <div id="fallbackOrderList" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 space-y-1.5 text-xs text-slate-300 font-mono">
-          <!-- Lista gerada por JS -->
+          <!-- Preenchido via JS -->
         </div>
         <p class="text-[10px] text-slate-500">
-          Se o modelo 1 falhar, o app pula automaticamente para o 2, depois para o 3.
+          Se o modelo 1 oscilar, pula para o 2, depois para o 3 automaticamente.
         </p>
       </div>
 
       <!-- Botão Salvar -->
       <div class="pt-2 flex justify-end space-x-2">
         <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">
-          Cancelar
+          Fechar
         </button>
         <button onclick="saveSettings()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition-all shadow-md">
-          Salvar Alterações
+          Salvar
         </button>
       </div>
 
     </div>
   </div>
 
-  <!-- SCRIPT PRINCIPAL DA APLICAÇÃO -->
+  <!-- JAVASCRIPT DA APLICAÇÃO -->
   <script>
-    // Inicialização de Estado
-    let userApiKey = localStorage.getItem('gemini_api_key') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.apiKey : '') || '';
+    // Estado Global
+    let workerApiUrl = localStorage.getItem('worker_api_url') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.apiUrl : '') || '';
     let currentModel = localStorage.getItem('gemini_selected_model') || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.currentModel : 'gemini-2.5-flash');
     let fallbackList = (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.fallbackModels) ? [...APP_CONFIG.fallbackModels] : ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
     let selectedStores = [];
 
-    // Carregar na Inicialização
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('headerModelBadge').innerText = currentModel;
       renderStoreBadges();
       populateSettingsModal();
     });
 
-    // Renderizar Lojas
     function renderStoreBadges() {
       const container = document.getElementById('storeBadgesContainer');
       container.innerHTML = '';
@@ -296,9 +292,8 @@
       renderStoreBadges();
     }
 
-    // Modal de Configuração
     function openSettingsModal() {
-      document.getElementById('settingApiKey').value = userApiKey;
+      document.getElementById('settingApiUrl').value = workerApiUrl;
       const select = document.getElementById('settingCurrentModel');
       select.innerHTML = '';
       fallbackList.forEach(model => {
@@ -325,16 +320,16 @@
     }
 
     function saveSettings() {
-      userApiKey = document.getElementById('settingApiKey').value.trim();
+      workerApiUrl = document.getElementById('settingApiUrl').value.trim();
       currentModel = document.getElementById('settingCurrentModel').value;
-      localStorage.setItem('gemini_api_key', userApiKey);
+      localStorage.setItem('worker_api_url', workerApiUrl);
       localStorage.setItem('gemini_selected_model', currentModel);
       document.getElementById('headerModelBadge').innerText = currentModel;
       closeSettingsModal();
     }
 
     // ==========================================
-    // EXECUÇÃO DA BUSCA COM AUTO-FALLBACK DE IA
+    // EXECUÇÃO DA BUSCA VIA BACKEND INVISÍVEL
     // ==========================================
     async function executeSearch() {
       const product = document.getElementById('inputProduct').value.trim();
@@ -346,17 +341,17 @@
         return;
       }
 
-      if (!userApiKey) {
+      // Verifica se a URL do Worker foi configurada
+      const targetApiUrl = workerApiUrl || (typeof APP_CONFIG !== 'undefined' ? APP_CONFIG.apiUrl : '');
+      if (!targetApiUrl) {
         openSettingsModal();
-        alert('Por favor, informe sua Chave Gemini API (gratuita no Google AI Studio) para realizar a busca.');
+        alert('Por favor, configure a URL do seu Cloudflare Worker (onde a chave da IA fica escondida) no config.js ou no modal de configurações.');
         return;
       }
 
-      // Prepara interface de status
       const statusContainer = document.getElementById('statusContainer');
       const statusMessage = document.getElementById('statusMessage');
       const fallbackLogs = document.getElementById('fallbackLogs');
-      const resultsSection = document.getElementById('resultsSection');
       const productsGrid = document.getElementById('productsGrid');
       const btnSearch = document.getElementById('btnSearch');
 
@@ -367,113 +362,52 @@
       btnSearch.disabled = true;
       btnSearch.classList.add('opacity-50');
 
-      // Ordem de teste: modelo selecionado primeiro, depois os restantes da lista
-      const modelsToTry = [currentModel, ...fallbackList.filter(m => m !== currentModel)];
-      let success = false;
-      let lastError = null;
+      statusMessage.innerText = `Consultando com modelo ${currentModel}... (com Fallback automático)`;
 
-      const storesListText = selectedStores.length > 0 ? selectedStores.join(', ') : 'Mercado Livre, Amazon, Shopee, Magalu, Ferreira Costa';
-
-      // Monta Prompt Estruturado com Filtro Rigoroso
-      const promptText = `
-Você é um motor de busca de compras altamente rigoroso e imparcial.
-Procure por ofertas do produto: "${product}" nas seguintes lojas no Brasil: ${storesListText}.
-
-REQUISITOS TÉCNICOS OBRIGATÓRIOS (FILTRO RESTRITIVO):
-- O produto DEVE conter comprovadamente a característica: "${mustHave || 'conforme solicitado'}".
-- O produto NÃO PODE conter: "${mustNotHave || 'itens divergentes'}".
-(Exemplo: Se foi pedido motor a indução, descarte qualquer modelo que use motor universal/escovas de carvão, mesmo que o vendedor mencione a palavra no título).
-
-Para cada produto encontrado que cumpra 100% dos requisitos, retorne estritamente um array JSON válido contendo objetos com:
-- "title": Nome completo e modelo exato do produto.
-- "store": Nome da loja (ex: Mercado Livre, Amazon, Shopee, Magalu, Ferreira Costa, etc).
-- "price": Preço formatado em Reais (ex: R$ 1.299,00).
-- "url": Link direto para a página do produto na loja.
-- "image_url": URL de imagem do produto (se encontrar, senão string vazia).
-- "verified_spec": Explicação curta comprovando a especificação (ex: "Confirmado: Motor a Indução de fábrica modelo X").
-
-IMPORTANTE: Responda SOMENTE o JSON puro (sem markdown, sem \`\`\`json). Se não encontrar nenhum que cumpra a especificação, retorne [].
-      `.trim();
-
-      // Loop do Fallback de Modelos
-      for (let i = 0; i < modelsToTry.length; i++) {
-        const model = modelsToTry[i];
-        statusMessage.innerText = `Pesquisando com modelo ${model}...`;
-
-        try {
-          const result = await callGeminiWithSearch(model, userApiKey, promptText);
-          if (result && Array.isArray(result)) {
-            success = true;
-            renderProducts(result, model);
-            statusContainer.classList.add('hidden');
-            break;
-          }
-        } catch (err) {
-          console.warn(`Falha no modelo ${model}:`, err);
-          lastError = err;
-          const logEntry = document.createElement('div');
-          logEntry.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Modelo <strong>${model}</strong> indisponível (${err.message || 'Erro'}). Alternando para o próximo da cascata...`;
-          fallbackLogs.appendChild(logEntry);
-        }
-      }
-
-      btnSearch.disabled = false;
-      btnSearch.classList.remove('opacity-50');
-
-      if (!success) {
-        statusContainer.className = 'rounded-xl border border-rose-500/40 bg-rose-950/20 p-4 text-xs font-medium space-y-2 block';
-        statusMessage.innerHTML = `<span class="text-rose-400 font-bold">Todos os modelos da cascata falharam.</span> Verifique sua chave API ou tente novamente em alguns instantes. Detalhe: ${lastError ? lastError.message : 'Erro desconhecido'}`;
-      }
-    }
-
-    // Chamada à API Gemini com Google Search Grounding
-    async function callGeminiWithSearch(model, apiKey, prompt) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      
-      const payload = {
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }]
-          }
-        ],
-        tools: [
-          {
-            google_search: {}
-          }
-        ]
-      };
-
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      
-      // Limpeza de blocos de código se a IA mandar ```json
-      const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-      
       try {
-        return JSON.parse(cleaned);
-      } catch (parseError) {
-        // Tenta extrair array usando regex se vier texto em volta
-        const arrayMatch = cleaned.match(/\[\s*\{.*\}\s*\]/s);
-        if (arrayMatch) {
-          return JSON.parse(arrayMatch[0]);
+        const payload = {
+          product,
+          mustHave,
+          mustNotHave,
+          stores: selectedStores.length > 0 ? selectedStores.join(', ') : 'Mercado Livre, Amazon, Shopee, Magalu, Ferreira Costa',
+          model: currentModel,
+          fallbackModels: fallbackList
+        };
+
+        const response = await fetch(targetApiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || `Erro do servidor (${response.status})`);
         }
-        throw new Error("Não foi possível decodificar os produtos retornados pela IA.");
+
+        if (data.fallbackLogs && data.fallbackLogs.length > 0) {
+          data.fallbackLogs.forEach(log => {
+            const el = document.createElement('div');
+            el.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> ${log}`;
+            fallbackLogs.appendChild(el);
+          });
+        }
+
+        renderProducts(data.products || [], data.modelUsed || currentModel);
+        statusContainer.classList.add('hidden');
+
+      } catch (err) {
+        console.error('Erro na pesquisa:', err);
+        statusContainer.className = 'rounded-xl border border-rose-500/40 bg-rose-950/20 p-4 text-xs font-medium space-y-2 block';
+        statusMessage.innerHTML = `<span class="text-rose-400 font-bold">Não foi possível completar a busca.</span> ${err.message}`;
+      } finally {
+        btnSearch.disabled = false;
+        btnSearch.classList.remove('opacity-50');
       }
     }
 
-    // Renderizar Cards de Produtos na Tela
+    // Renderizar Produtos
     function renderProducts(products, modelUsed) {
       const grid = document.getElementById('productsGrid');
       const countEl = document.getElementById('resultsCount');
@@ -499,7 +433,6 @@ IMPORTANTE: Responda SOMENTE o JSON puro (sem markdown, sem \`\`\`json). Se não
       }
 
       products.forEach(item => {
-        // Encontra cor da loja no config
         const storeInfo = (APP_CONFIG.stores || []).find(s => s.name.toLowerCase() === (item.store || '').toLowerCase()) || {
           color: '#6366F1',
           textColor: '#ffffff'
@@ -510,7 +443,6 @@ IMPORTANTE: Responda SOMENTE o JSON puro (sem markdown, sem \`\`\`json). Se não
         
         card.innerHTML = `
           <div class="space-y-3">
-            <!-- Topo do Card: Loja e Preço -->
             <div class="flex items-center justify-between">
               <span class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm" style="background-color: ${storeInfo.color}; color: ${storeInfo.textColor}">
                 ${item.store || 'Loja Online'}
@@ -520,12 +452,10 @@ IMPORTANTE: Responda SOMENTE o JSON puro (sem markdown, sem \`\`\`json). Se não
               </span>
             </div>
 
-            <!-- Título do Produto -->
             <h4 class="text-sm font-bold text-white line-clamp-2 leading-snug" title="${item.title}">
               ${item.title}
             </h4>
 
-            <!-- Selo de Especificação Técnica Verificada -->
             ${item.verified_spec ? `
               <div class="bg-emerald-950/40 border border-emerald-500/30 rounded-lg p-2 text-[11px] text-emerald-300 flex items-start space-x-1.5">
                 <i class="fa-solid fa-circle-check text-emerald-400 text-xs mt-0.5 shrink-0"></i>
@@ -534,7 +464,6 @@ IMPORTANTE: Responda SOMENTE o JSON puro (sem markdown, sem \`\`\`json). Se não
             ` : ''}
           </div>
 
-          <!-- Botão Link Direto para a Loja -->
           <div class="pt-4 mt-2 border-t border-slate-800/80">
             <a 
               href="${item.url}" 

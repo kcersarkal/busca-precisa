@@ -2,18 +2,19 @@
  * CONFIGURAÇÃO DO BUSCADOR INTELIGENTE DE PRODUTOS
  * 
  * Você pode editar este arquivo diretamente pelo navegador do celular no GitHub!
- * Basta clicar no lápis (Editar), alterar o modelo e dar Commit.
+ * Basta clicar no lápis (Editar), alterar o modelo ou a URL do Worker e dar Commit.
  */
 
 const APP_CONFIG = {
-  // Chave da API do Google Gemini (você pode colocar aqui ou digitar na tela do app na 1ª vez)
-  apiKey: "",
+  // URL DO SEU CLOUDFLARE WORKER (onde a chave da IA fica ESCONDIDA)
+  // Cole aqui a URL do seu Worker gerado no Cloudflare (Ex: https://busca-precisa.seu-nome.workers.dev)
+  apiUrl: "",
 
-  // Modelo padrão prioritário
+  // Modelo padrão prioritário (editável pelo celular!)
   currentModel: "gemini-2.5-flash",
 
   // CASCATA DE FALLBACK DE MODELOS:
-  // Se o 1º falhar (cota, erro ou fora do ar), o app tenta o 2º, depois o 3º, etc.
+  // Se o 1º falhar (cota, erro ou fora do ar), tenta o 2º, depois o 3º, etc.
   fallbackModels: [
     "gemini-2.5-flash",
     "gemini-2.0-flash",
