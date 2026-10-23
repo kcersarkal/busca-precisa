@@ -18,7 +18,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
 
-  <!-- TOP BAR / HEADER LIMPO (SEM NOMES DE MODELOS) -->
+  <!-- TOP BAR / HEADER -->
   <header class="sticky top-0 z-40 border-b border-slate-800 glass-header px-4 py-3.5">
     <div class="max-w-6xl mx-auto flex items-center justify-between">
       <div class="flex items-center space-x-3">
@@ -133,7 +133,7 @@
 
     </div>
 
-    <!-- PAINEL DE STATUS DE BUSCA (DISCRETO E PROFISSIONAL) -->
+    <!-- PAINEL DE STATUS -->
     <div id="statusContainer" class="hidden rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-4 text-xs font-medium space-y-2 transition-all">
       <div class="flex items-center space-x-2">
         <div class="w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
@@ -276,7 +276,23 @@
       }
     }
 
-    // Renderizar Produtos
+    // Helper para gerar URL direta caso venha vazia
+    function getStoreSearchUrl(storeName, title) {
+      const q = encodeURIComponent(title);
+      const store = (storeName || '').toLowerCase();
+      if (store.includes('mercado')) return `https://lista.mercadolivre.com.br/${q}`;
+      if (store.includes('amazon')) return `https://www.amazon.com.br/s?k=${q}`;
+      if (store.includes('shopee')) return `https://shopee.com.br/search?keyword=${q}`;
+      if (store.includes('magalu')) return `https://www.magazineluiza.com.br/busca/${q}/`;
+      if (store.includes('ferreira')) return `https://www.ferreiracosta.com/busca?q=${q}`;
+      if (store.includes('leroy')) return `https://www.leroymerlin.com.br/pesquisa?termo=${q}`;
+      if (store.includes('casas')) return `https://www.casasbahia.com.br/b?q=${q}`;
+      if (store.includes('kabum')) return `https://www.kabum.com.br/busca/${q}`;
+      if (store.includes('ali')) return `https://pt.aliexpress.com/w/wholesale-${q}.html`;
+      return `https://www.google.com/search?q=${encodeURIComponent(storeName + ' ' + title)}&tbm=shop`;
+    }
+
+    // Renderizar Produtos com Links 100% Funcionais
     function renderProducts(products) {
       const grid = document.getElementById('productsGrid');
       const countEl = document.getElementById('resultsCount');
@@ -305,11 +321,17 @@
           textColor: '#ffffff'
         };
 
+        // Garante que o link NUNCA esteja vazio ou quebrado
+        const targetUrl = (item.url && item.url.startsWith('http') && !item.url.includes('example.com')) 
+          ? item.url 
+          : getStoreSearchUrl(item.store, item.title);
+
         const card = document.createElement('div');
-        card.className = "bg-slate-900/90 border border-slate-800 hover:border-slate-700 rounded-2xl p-4 flex flex-col justify-between shadow-lg transition-all hover:translate-y-[-2px] hover:shadow-indigo-500/10";
+        card.className = "bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-4 flex flex-col justify-between shadow-lg transition-all hover:translate-y-[-2px] hover:shadow-indigo-500/10 group";
         
         card.innerHTML = `
           <div class="space-y-3">
+            <!-- Topo do Card: Loja e Preço -->
             <div class="flex items-center justify-between">
               <span class="px-2.5 py-1 rounded-full text-[11px] font-bold shadow-sm" style="background-color: ${storeInfo.color}; color: ${storeInfo.textColor}">
                 ${item.store || 'Loja Online'}
@@ -319,26 +341,31 @@
               </span>
             </div>
 
-            <h4 class="text-sm font-bold text-white line-clamp-2 leading-snug" title="${item.title}">
-              ${item.title}
-            </h4>
+            <!-- Título do Produto (Clicável) -->
+            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="block">
+              <h4 class="text-sm font-bold text-white line-clamp-2 leading-snug group-hover:text-indigo-300 transition-colors" title="${item.title}">
+                ${item.title}
+              </h4>
+            </a>
 
+            <!-- Selo de Especificação Técnica Verificada -->
             ${item.verified_spec ? `
-              <div class="bg-emerald-950/40 border border-emerald-500/30 rounded-lg p-2 text-[11px] text-emerald-300 flex items-start space-x-1.5">
+              <div class="bg-emerald-950/40 border border-emerald-500/30 rounded-lg p-2.5 text-[11px] text-emerald-300 flex items-start space-x-2">
                 <i class="fa-solid fa-circle-check text-emerald-400 text-xs mt-0.5 shrink-0"></i>
-                <span class="leading-tight">${item.verified_spec}</span>
+                <span class="leading-tight font-medium">${item.verified_spec}</span>
               </div>
             ` : ''}
           </div>
 
-          <div class="pt-4 mt-2 border-t border-slate-800/80">
+          <!-- Botão de Ação Direto em Destaque -->
+          <div class="pt-4 mt-3 border-t border-slate-800">
             <a 
-              href="${item.url}" 
+              href="${targetUrl}" 
               target="_blank" 
               rel="noopener noreferrer"
-              class="w-full bg-slate-800 hover:bg-indigo-600 text-white font-semibold py-2 px-3 rounded-xl text-xs flex items-center justify-center space-x-1.5 transition-all"
+              class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center space-x-2 transition-all shadow-md active:scale-[0.98]"
             >
-              <span>Ver na Loja Oficial</span>
+              <span>Ver Oferta na ${item.store || 'Loja'}</span>
               <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
             </a>
           </div>
