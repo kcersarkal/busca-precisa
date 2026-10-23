@@ -276,22 +276,6 @@
       }
     }
 
-    // Helper para gerar URL direta caso venha vazia
-    function getStoreSearchUrl(storeName, title) {
-      const q = encodeURIComponent(title);
-      const store = (storeName || '').toLowerCase();
-      if (store.includes('mercado')) return `https://lista.mercadolivre.com.br/${q}`;
-      if (store.includes('amazon')) return `https://www.amazon.com.br/s?k=${q}`;
-      if (store.includes('shopee')) return `https://shopee.com.br/search?keyword=${q}`;
-      if (store.includes('magalu')) return `https://www.magazineluiza.com.br/busca/${q}/`;
-      if (store.includes('ferreira')) return `https://www.ferreiracosta.com/busca?q=${q}`;
-      if (store.includes('leroy')) return `https://www.leroymerlin.com.br/pesquisa?termo=${q}`;
-      if (store.includes('casas')) return `https://www.casasbahia.com.br/b?q=${q}`;
-      if (store.includes('kabum')) return `https://www.kabum.com.br/busca/${q}`;
-      if (store.includes('ali')) return `https://pt.aliexpress.com/w/wholesale-${q}.html`;
-      return `https://www.google.com/search?q=${encodeURIComponent(storeName + ' ' + title)}&tbm=shop`;
-    }
-
     // Renderizar Produtos com Links 100% Funcionais
     function renderProducts(products) {
       const grid = document.getElementById('productsGrid');
@@ -321,10 +305,8 @@
           textColor: '#ffffff'
         };
 
-        // Garante que o link NUNCA esteja vazio ou quebrado
-        const targetUrl = (item.url && item.url.startsWith('http') && !item.url.includes('example.com')) 
-          ? item.url 
-          : getStoreSearchUrl(item.store, item.title);
+        const targetUrl = item.url || `https://www.google.com/search?q=${encodeURIComponent(item.store + ' ' + item.title)}&tbm=shop`;
+        const googleShopUrl = item.googleShoppingUrl || `https://www.google.com/search?q=${encodeURIComponent(item.title)}&tbm=shop`;
 
         const card = document.createElement('div');
         card.className = "bg-slate-900/90 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-4 flex flex-col justify-between shadow-lg transition-all hover:translate-y-[-2px] hover:shadow-indigo-500/10 group";
@@ -357,8 +339,9 @@
             ` : ''}
           </div>
 
-          <!-- Botão de Ação Direto em Destaque -->
-          <div class="pt-4 mt-3 border-t border-slate-800">
+          <!-- Botões de Ação -->
+          <div class="pt-4 mt-3 border-t border-slate-800 space-y-2">
+            <!-- Botão Principal: Abre a Loja Selecionada -->
             <a 
               href="${targetUrl}" 
               target="_blank" 
@@ -367,6 +350,17 @@
             >
               <span>Ver Oferta na ${item.store || 'Loja'}</span>
               <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            </a>
+
+            <!-- Botão Secundário: Comparar em Todas as Lojas -->
+            <a 
+              href="${googleShopUrl}" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="w-full bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white font-medium py-1.5 px-3 rounded-lg text-[11px] flex items-center justify-center space-x-1.5 transition-all border border-slate-700/60"
+            >
+              <i class="fa-solid fa-magnifying-glass-dollar text-slate-400 text-[10px]"></i>
+              <span>Comparar Preço em Todas as Lojas</span>
             </a>
           </div>
         `;

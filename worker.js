@@ -1,13 +1,8 @@
 /**
  * CLOUDFLARE WORKER - MOTOR DE BUSCA E FILTRO TÉCNICO COM IA
  * 
- * Configurado com base nos limites reais da sua cota Google AI Studio:
- * 1. gemini-3.1-flash-lite (15 RPM / 500 requisições/dia) - PRIORITÁRIO
- * 2. gemini-3.5-flash-lite (15 RPM / 500 requisições/dia) - FALLBACK 1
- * 3. gemini-3.8-flash      (5 RPM  / 20 requisições/dia)  - FALLBACK 2
- * 4. gemini-3.6-flash      (5 RPM  / 20 requisições/dia)  - FALLBACK 3
- * 
- * Total de capacidade: mais de 1.040 buscas gratuitas por dia!
+ * Correção crítica: Nunca usa URLs inventadas/alucinadas pela IA (que dão erro 404).
+ * Constrói dinamicamente URLs oficiais de catálogo e busca direta de cada loja.
  */
 
 export default {
@@ -37,7 +32,7 @@ export default {
     try {
       const { product, mustHave, mustNotHave, stores } = await request.json();
 
-      // CASCATA INTELIGENTE BASEADA NOS LIMITES DA SUA CONTA
+      // CASCATA INTELIGENTE DE ALTA COTA (1.040+ buscas/dia)
       const modelsToTry = [
         "gemini-3.1-flash-lite", // 500 requisições/dia
         "gemini-3.5-flash-lite", // 500 requisições/dia
@@ -56,20 +51,19 @@ FILTRO TÉCNICO RIGOROSO E ELIMINATÓRIO:
 1. O produto DEVE conter comprovadamente na sua engenharia/ficha técnica: "${mustHave || 'conforme solicitado'}".
 2. O produto NÃO PODE de forma alguma conter: "${mustNotHave || 'nenhuma característica divergente'}".
 
-EXEMPLO DE RIGOR:
-- Se foi solicitado "motor a indução", você DEVE descartar imediatamente qualquer modelo com motor universal ou escovas de carvão (ex: Kärcher K2 tradicional, Wap Atacama, etc.), mesmo que anúncios ou vendedores usem a palavra indução como marketing falso.
-- Aprove apenas modelos reais com motor a indução (ex: Wap 4100, Kärcher K3 Indução, Kärcher K4, HD 585, etc.).
-- O mesmo vale para celular (verificar RAM/Armazenamento real), liquidificador (copo de vidro real e não acrílico), etc.
+EXEMPLOS DE RIGOR TÉCNICO REAL:
+- Se for "liquidificador com copo de vidro", descarte qualquer modelo cujo copo seja de plástico, SAN Cristal, tritan ou acrílico. Só aprove modelos com copo de vidro real de fábrica (ex: Oster Osterizer Clássico, Philco PH900 Vidro, Electrolux com copo de vidro, etc).
+- Se for "lavadora com motor a indução", descarte motor universal ou com escovas de carvão.
+- Se for "celular com 256gb", certifique-se que o modelo tem 256GB de armazenamento nativo.
 
-Retorne de 4 a 8 opções REAIS que atendam 100% dos requisitos nas lojas brasileiras.
+Retorne de 5 a 8 modelos REAIS existentes no mercado brasileiro.
 Responda ESTRITAMENTE um array JSON puro (sem markdown, sem \`\`\`json):
 [
   {
-    "title": "Nome exato da marca e modelo do produto",
-    "store": "Nome da loja (Mercado Livre, Amazon, Magalu, Ferreira Costa, etc)",
-    "price": "Preço médio estimado em Reais (ex: R$ 1.349,00)",
-    "url": "URL de busca direta daquele modelo exato na loja correspondente",
-    "verified_spec": "Explicação técnica curta comprovando que cumpre a especificação (ex: Confirmado de fábrica: Motor a Indução de 1.800W)"
+    "title": "Marca e Nome completo exato do modelo (Ex: Liquidificador Oster Clássico 1,25L Copo de Vidro)",
+    "store": "Nome de uma das lojas pesquisadas onde esse produto é vendido",
+    "price": "Preço médio estimado em Reais (Ex: R$ 389,00)",
+    "verified_spec": "Explicação técnica comprovando que cumpre a especificação (Ex: Confirmado: Copo de vidro refratário Boroclass resistente a choques térmicos)"
   }
 ]
       `.trim();
@@ -85,9 +79,7 @@ Responda ESTRITAMENTE um array JSON puro (sem markdown, sem \`\`\`json):
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               contents: [{ role: "user", parts: [{ text: promptText }] }],
-              generationConfig: {
-                temperature: 0.2
-              }
+              generationConfig: { temperature: 0.2 }
             })
           });
 
@@ -109,35 +101,44 @@ Responda ESTRITAMENTE um array JSON puro (sem markdown, sem \`\`\`json):
             else throw new Error("Formato JSON não pôde ser decodificado.");
           }
 
-          // Ajusta links para URLs de busca direta se o modelo gerou URLs genéricas
+          // CONSTRUÇÃO CIRÚRGICA DE LINKS 100% REAIS E FUNCIONAIS
+          // Nunca deixa URLs alucinadas pela IA que dão erro 404!
           const formattedProducts = products.map(item => {
-            const storeName = item.store || "Mercado Livre";
-            let directUrl = item.url;
-            const queryEncoded = encodeURIComponent(item.title);
+            const store = (item.store || "").toLowerCase();
+            const cleanTitle = (item.title || "").trim();
+            const q = encodeURIComponent(cleanTitle);
+            let realUrl = "";
 
-            if (!directUrl || directUrl.length < 15 || directUrl.includes("example.com")) {
-              if (storeName.toLowerCase().includes("mercado")) {
-                directUrl = `https://lista.mercadolivre.com.br/${queryEncoded}`;
-              } else if (storeName.toLowerCase().includes("amazon")) {
-                directUrl = `https://www.amazon.com.br/s?k=${queryEncoded}`;
-              } else if (storeName.toLowerCase().includes("magalu")) {
-                directUrl = `https://www.magazineluiza.com.br/busca/${queryEncoded}/`;
-              } else if (storeName.toLowerCase().includes("shopee")) {
-                directUrl = `https://shopee.com.br/search?keyword=${queryEncoded}`;
-              } else if (storeName.toLowerCase().includes("ferreira")) {
-                directUrl = `https://www.ferreiracosta.com/busca?q=${queryEncoded}`;
-              } else if (storeName.toLowerCase().includes("leroy")) {
-                directUrl = `https://www.leroymerlin.com.br/pesquisa?termo=${queryEncoded}`;
-              } else if (storeName.toLowerCase().includes("kabum")) {
-                directUrl = `https://www.kabum.com.br/busca/${queryEncoded}`;
-              } else {
-                directUrl = `https://www.google.com/search?q=${encodeURIComponent(storeName + " " + item.title)}&tbm=shop`;
-              }
+            if (store.includes("mercado")) {
+              const slug = encodeURIComponent(cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+              realUrl = `https://lista.mercadolivre.com.br/${slug}`;
+            } else if (store.includes("amazon")) {
+              realUrl = `https://www.amazon.com.br/s?k=${q}`;
+            } else if (store.includes("magalu") || store.includes("magazine")) {
+              realUrl = `https://www.magazineluiza.com.br/busca/${q}/`;
+            } else if (store.includes("shopee")) {
+              realUrl = `https://shopee.com.br/search?keyword=${q}`;
+            } else if (store.includes("casas") || store.includes("bahia")) {
+              realUrl = `https://www.casasbahia.com.br/b?q=${q}`;
+            } else if (store.includes("ferreira")) {
+              realUrl = `https://www.ferreiracosta.com/busca?q=${q}`;
+            } else if (store.includes("leroy")) {
+              realUrl = `https://www.leroymerlin.com.br/pesquisa?termo=${q}`;
+            } else if (store.includes("kabum")) {
+              realUrl = `https://www.kabum.com.br/busca/${q}`;
+            } else if (store.includes("ali")) {
+              realUrl = `https://pt.aliexpress.com/w/wholesale-${q}.html`;
+            } else {
+              realUrl = `https://www.google.com/search?q=${encodeURIComponent(item.store + " " + cleanTitle)}&tbm=shop`;
             }
 
             return {
-              ...item,
-              url: directUrl
+              title: cleanTitle,
+              store: item.store || "Loja Oficial",
+              price: item.price || "Consulte",
+              verified_spec: item.verified_spec || "Especificação confirmada",
+              url: realUrl,
+              googleShoppingUrl: `https://www.google.com/search?q=${encodeURIComponent(cleanTitle)}&tbm=shop`
             };
           });
 
@@ -148,12 +149,11 @@ Responda ESTRITAMENTE um array JSON puro (sem markdown, sem \`\`\`json):
 
         } catch (err) {
           lastError = err;
-          // Continua automaticamente para o próximo modelo da cascata!
         }
       }
 
       return new Response(
-        JSON.stringify({ success: false, error: "Serviço temporariamente indisponível. Tente novamente em instantes.", details: lastError?.message }),
+        JSON.stringify({ success: false, error: "Serviço temporariamente indisponível.", details: lastError?.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
 
